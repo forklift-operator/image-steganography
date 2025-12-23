@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.steganography.worker.embeder;
+package bg.sofia.uni.fmi.mjt.steganography.worker;
 
 import bg.sofia.uni.fmi.mjt.steganography.algorithm.SteganographyAlgorithm;
 import bg.sofia.uni.fmi.mjt.steganography.misc.EmbedTask;

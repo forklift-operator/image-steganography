@@ -32,7 +32,6 @@ public class EmbedConsumer implements Runnable {
     public void saveImage(BufferedImage image, String outputDir, String name) {
         try {
             ImageIO.write(image, "png", new File(outputDir, name));
-            System.out.println("Saved " + name + " to " + outputDir);
         } catch (IOException e) {
             throw new UncheckedIOException(String.format("While saving image %s", name), e);
         }
@@ -57,6 +56,6 @@ public class EmbedConsumer implements Runnable {
 
     void consume(EmbedTask task) {
         BufferedImage embedded = embedAlgorithm.embed(task.cover(), task.secret());
-        saveImage(embedded, task.outputPath(), task.coverName());
+        saveImage(embedded, task.outputPath(), task.coverName() + ".png");
     }
 }

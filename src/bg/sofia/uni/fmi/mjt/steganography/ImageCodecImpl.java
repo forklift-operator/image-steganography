@@ -18,8 +18,11 @@ import java.util.concurrent.BlockingQueue;
 
 public class ImageCodecImpl implements ImageCodec {
     private final SteganoImpl algorithm = new SteganoImpl();
-    private final int EMBED_QUEUE_CAP = 5;
-    private final int NUMBER_OF_EMBED_CONSUMERS = 2;
+
+    private static final int EMBED_QUEUE_CAP = 5;
+    private static final int EXTRACT_QUEUE_CAP = 5;
+    private static final int NUMBER_OF_EMBED_CONSUMERS = 2;
+    private static final int NUMBER_OF_EXTRACT_CONSUMERS = 2;
 
     @Override
     public void embedPNGImages(String coverSourceDirectory, String secretSourceDirectory, String outputDirectory) {

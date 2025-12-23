@@ -3,8 +3,8 @@ package bg.sofia.uni.fmi.mjt.steganography.misc;
 import java.awt.image.BufferedImage;
 
 public record EmbedTask(
-        BufferedImage cover,
         BufferedImage secret,
+        BufferedImage cover,
         String coverName,
         String outputPath,
         boolean isPoison

@@ -71,6 +71,11 @@ public class ImageCodecImpl implements ImageCodec {
                         false
                 ));
             }
+
+            for (int i = 0; i < NUMBER_OF_EMBED_CONSUMERS; i++) {
+                queue.put(EmbedTask.poisonPill());
+            }
+
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }

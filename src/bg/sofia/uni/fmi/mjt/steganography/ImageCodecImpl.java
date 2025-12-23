@@ -2,7 +2,9 @@ package bg.sofia.uni.fmi.mjt.steganography;
 
 import bg.sofia.uni.fmi.mjt.steganography.algorithm.SteganoImpl;
 import bg.sofia.uni.fmi.mjt.steganography.misc.EmbedTask;
-import bg.sofia.uni.fmi.mjt.steganography.worker.embeder.EmbedConsumer;
+import bg.sofia.uni.fmi.mjt.steganography.misc.ExtractTask;
+import bg.sofia.uni.fmi.mjt.steganography.worker.EmbedConsumer;
+import bg.sofia.uni.fmi.mjt.steganography.worker.ExtractConsumer;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -56,8 +58,6 @@ public class ImageCodecImpl implements ImageCodec {
                 Path currentCover = coverIterator.next();
                 Path currentSecret = secretIterator.next();
 
-                System.out.println(currentCover.toString() + " " + currentSecret.toString());
-
                 BufferedImage coverImg = loadImage(currentCover);
                 BufferedImage secretImg = loadImage(currentSecret);
 
@@ -80,18 +80,54 @@ public class ImageCodecImpl implements ImageCodec {
             throw new RuntimeException(e);
         }
 
-        for (int i = 0; i < NUMBER_OF_EMBED_CONSUMERS; i++) {
-            try {
-                queue.put(EmbedTask.poisonPill());
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
 
     }
 
     @Override
     public void extractPNGImages(String sourceDirectory, String outputDirectory) {
+
+        if (sourceDirectory == null || outputDirectory == null) {
+            throw new IllegalArgumentException("Directories cannot be null");
+        }
+
+        File dir = new File(outputDirectory);
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+
+        BlockingQueue<ExtractTask> queue = new ArrayBlockingQueue<>(EXTRACT_QUEUE_CAP);
+
+        for (int i = 0; i < NUMBER_OF_EXTRACT_CONSUMERS; i++) {
+            Thread consumer = new Thread(new ExtractConsumer(queue, algorithm));
+            consumer.start();
+        }
+
+        Path sourcePath = Path.of(sourceDirectory);
+
+        try (DirectoryStream<Path> sourceStream = Files.newDirectoryStream(sourcePath)) {
+
+            Iterator<Path> sourceIterator = sourceStream.iterator();
+
+            while (sourceIterator.hasNext()) {
+                Path current = sourceIterator.next();
+
+                BufferedImage currentImage = loadImage(current);
+
+                queue.put(new ExtractTask(
+                        currentImage,
+                        getFileNameNoExtension(current),
+                        outputDirectory,
+                        false
+                ));
+            }
+
+            for (int i = 0; i < NUMBER_OF_EXTRACT_CONSUMERS; i++) {
+                queue.put(ExtractTask.poisonPill());
+            }
+
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
     }
 

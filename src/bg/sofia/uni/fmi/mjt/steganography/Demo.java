@@ -28,15 +28,10 @@ public class Demo {
     }
 
     static void main() {
-        SteganoImpl alg = new SteganoImpl();
+        ImageCodecImpl codec = new ImageCodecImpl();
 
-        BufferedImage secret = loadImage(Path.of("dog.png"));
-        BufferedImage cover = loadImage(Path.of("cat.png"));
+//        codec.embedPNGImages("./covers", "./secrets", "./embedded");
 
-        BufferedImage embedded = alg.embed(secret, cover);
-        BufferedImage extracted = alg.extract(embedded);
-
-        saveImage(embedded, ".", "./hidden.png");
-        saveImage(extracted, ".", "./extracted.png");
+        codec.extractPNGImages("./embedded", "./extracted");
     }
 }

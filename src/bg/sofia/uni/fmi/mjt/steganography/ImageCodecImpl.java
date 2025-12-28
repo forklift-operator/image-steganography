@@ -17,14 +17,15 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ImageCodecImpl implements ImageCodec {
     private final SteganoImpl algorithm = new SteganoImpl();
 
     private static final int EMBED_QUEUE_CAP = 5;
     private static final int EXTRACT_QUEUE_CAP = 5;
-    private static final int NUMBER_OF_EMBED_CONSUMERS = 2;
-    private static final int NUMBER_OF_EXTRACT_CONSUMERS = 2;
+    private static final int NUMBER_OF_CONSUMERS = Runtime.getRuntime().availableProcessors();
 
     @Override
     public void embedPNGImages(String coverSourceDirectory, String secretSourceDirectory, String outputDirectory) {
@@ -40,9 +41,10 @@ public class ImageCodecImpl implements ImageCodec {
 
         BlockingQueue<EmbedTask> queue = new ArrayBlockingQueue<>(EMBED_QUEUE_CAP);
 
-        for (int i = 0; i < NUMBER_OF_EMBED_CONSUMERS; i++) {
-            Thread consumer = new Thread(new EmbedConsumer(queue, algorithm));
-            consumer.start();
+        ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_CONSUMERS);
+
+        for (int i = 0; i < NUMBER_OF_CONSUMERS; i++) {
+            executor.submit(new EmbedConsumer(queue, algorithm));
         }
 
         Path coverPath = Path.of(coverSourceDirectory);
@@ -72,7 +74,7 @@ public class ImageCodecImpl implements ImageCodec {
                 ));
             }
 
-            for (int i = 0; i < NUMBER_OF_EMBED_CONSUMERS; i++) {
+            for (int i = 0; i < NUMBER_OF_CONSUMERS; i++) {
                 queue.put(EmbedTask.poisonPill());
             }
 
@@ -80,7 +82,7 @@ public class ImageCodecImpl implements ImageCodec {
             throw new RuntimeException(e);
         }
 
-
+        executor.shutdown();
     }
 
     @Override
@@ -97,9 +99,10 @@ public class ImageCodecImpl implements ImageCodec {
 
         BlockingQueue<ExtractTask> queue = new ArrayBlockingQueue<>(EXTRACT_QUEUE_CAP);
 
-        for (int i = 0; i < NUMBER_OF_EXTRACT_CONSUMERS; i++) {
-            Thread consumer = new Thread(new ExtractConsumer(queue, algorithm));
-            consumer.start();
+        ExecutorService executor = Executors.newFixedThreadPool(NUMBER_OF_CONSUMERS);
+
+        for (int i = 0; i < NUMBER_OF_CONSUMERS; i++) {
+            executor.submit(new ExtractConsumer(queue, algorithm));
         }
 
         Path sourcePath = Path.of(sourceDirectory);
@@ -121,9 +124,11 @@ public class ImageCodecImpl implements ImageCodec {
                 ));
             }
 
-            for (int i = 0; i < NUMBER_OF_EXTRACT_CONSUMERS; i++) {
+            for (int i = 0; i < NUMBER_OF_CONSUMERS; i++) {
                 queue.put(ExtractTask.poisonPill());
             }
+
+            executor.shutdown();
 
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);

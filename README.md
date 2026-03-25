@@ -1,4 +1,4 @@
-# image-steganography
+# Image Steganography
 
 Hide one PNG image inside another PNG image, then extract it back later.
 
@@ -71,3 +71,21 @@ The directory-level operations are implemented with a producer-consumer design:
 - poison-pill tasks are used to stop the workers cleanly
 
 There are separate task records and worker classes for embedding and extraction. Queue capacity is 5 for both pipelines.
+
+## Project structure
+
+```text
+src/
+└── bg/sofia/uni/fmi/mjt/steganography
+    ├── Demo.java
+    ├── ImageCodec.java
+    ├── ImageCodecImpl.java
+    ├── algorithm
+    │   ├── SteganoImpl.java
+    │   └── SteganographyAlgorithm.java
+    ├── misc
+    │   ├── EmbedTask.java
+    │   └── ExtractTask.java
+    └── worker
+        ├── EmbedConsumer.java
+        └── ExtractConsumer.java
